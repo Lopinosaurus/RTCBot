@@ -1,7 +1,25 @@
 {
     "auction": [
-        "nft/poke_rp.png",
-        "nft/poke_alex.png",
-        "nft/poke_frog.png"
+        "nft/poke_frog.png",
+        "nft/poke_13.png",
+        "nft/poke_arsam.png",
+        [
+            1000,
+            0,
+            "Personne"
+        ],
+        [
+            1000,
+            0,
+            "Personne"
+        ],
+        [
+            1000,
+            0,
+            "Personne"
+        ],
+        0,
+        0,
+        0
     ]
 }
