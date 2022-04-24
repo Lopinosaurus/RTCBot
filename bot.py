@@ -1,38 +1,119 @@
 # bot.py
-# Libaries
+# region Library
 import os
 
+from PIL import Image
 import discord
+from discord.ext import tasks
 from dotenv import load_dotenv
 import json
 import random
 import time
+#endregion
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
 client = discord.Client()
 
-# On ready
+
+# region Events and Loop Async Functions
 @client.event
 async def on_ready():
     print(f'{client.user.name} has connected to Discord!')
     await client.change_presence(activity=discord.Game(name = "rhelp | rstart"))
+    task_loop.start()
+
+
+@tasks.loop(seconds=60)
+async def task_loop(seconds=60):
+    _time = time.asctime(time.localtime())
+    _channel = client.get_channel(967395369296203786)
+
+    #Checking new day at midnight
+    if str(_time[11]) +  str(_time[12]) + str(_time[14]) + str(_time[15]) == "0000":
+        # Avoiding recursive issues
+        #_time[15] = "n"
+        marketdb = open("market.json", "r+", encoding="utf-8")
+        mdata = json.load(marketdb)
+        marray = mdata["market"]
+        # Taking random NFT in dir/
+        nfn1 = random.randrange(len(marray) - 1)
+        nfn2 = random.randrange(len(marray) - 1)
+        nfn3 = random.randrange(len(marray) - 1)
+
+        while nfn2 == nfn3 or nfn2 == nfn1 or nfn3 == nfn1:
+            nfn2 = random.randrange(len(marray) - 1)
+            nfn3 = random.randrange(len(marray) - 1)
+
+        # Setting the random NFT
+        nft1 = "nft/" + marray[nfn1]
+        nft2 = "nft/" + marray[nfn2]
+        nft3 = "nft/" + marray[nfn3]
+
+        marketdb.close()
+        auctiondb = open("auction.json", "r+", encoding="utf-8")
+        ahdata = json.load(auctiondb)
+        aharray = ahdata["auction"]
+
+        aharray[0] = nft1
+        aharray[1] = nft2
+        aharray[2] = nft3
+
+        auctiondb.seek(0)
+        json.dump(ahdata, auctiondb, indent=4)
+        auctiondb.truncate()
+        
+        auctiondb.close()
+
+        market_embed = discord.Embed(title="NFT du jour à vendre : ", description="Marché NFT du " + time.asctime(time.localtime()), color=0xffef00)
+        #Creating Market image
+        images = [Image.open(x) for x in [nft1, nft2, nft3]]
+        total_width = 0
+        max_height = 0
+        # Setting images dimensions
+
+        for img in images:
+            total_width += img.size[0]
+            max_height = max(max_height, img.size[1])
+        final_market = Image.new('RGB', (total_width, max_height))
+        current_width = 0
+        for img in images:
+            final_market.paste(img, (current_width,0))
+            current_width += img.size[0]
+        
+        final_market.save('market.png')
+
+        nft1 = nft1.replace(".png", "")
+        nft2 = nft2.replace(".png", "")
+        nft3 = nft3.replace(".png", "")
+        file = discord.File("market.png", filename="market.png")
+        market_embed.add_field(name=nft1, value="Mise de départ : 1000 RTC <:rtc:967486256109994074> ")
+        market_embed.add_field(name=nft2, value="Mise de départ : 1000 RTC <:rtc:967486256109994074> ")
+        market_embed.add_field(name=nft3, value="Mise de départ : 1000 RTC <:rtc:967486256109994074> ")
+        market_embed.set_image(url="attachment://market.png")
+        await _channel.send(file = file, embed = market_embed)
+        return
+
 
 @client.event
 # Ignore self messages
 async def on_message(message):
     if message.author == client.user:
         return
+#endregion
+
 
     #region HELP
-    if message.content.startswith("rhelp"):
-        local_embed = discord.Embed(title='Help Menu', description="Liste des commandes disponibles (Version 1.1 du RTCBot)", color=0xffef00)
+    if message.content.lower().startswith("rhelp"):
+        local_embed = discord.Embed(title='Help Menu', description="Liste des commandes disponibles (Version 1.2 du RTCBot)", color=0xffef00)
         local_embed.add_field(name="rstart", value="Ouvre un portefeuille de crypto-monnaie et débute votre aventure de sérial-entrepreneur.", inline=False)
         local_embed.add_field(name="rinv", value="Montre le contenu de votre portefeuille de digital marketeux", inline=False)
         local_embed.add_field(name="rdaily", value="Demande à Elon Musk de vous verser votre part quotidienne de crypto-monnaie", inline=False)
         local_embed.add_field(name="rnet", value="Montre le fameux marché noir de Feldup, où vous pouvez faire l'acquisition de mine(u)rs", inline=False)
         local_embed.add_field(name="rmine", value="Récolte les RTC minés par vos miners", inline=False)
+        local_embed.add_field(name="rmarket", value="Montre le marché quotidien des NFT", inline=False)
+        local_embed.add_field(name="En développement : ", value="ratio, rnft, rshow, rtrade", inline=False)
         local_embed.add_field(name="LE BOT EST EN DEV", value="Les commandes sont en constant changement, et de nouvelles sont en rajout", inline=False)
         
         await message.channel.send(embed = local_embed)
@@ -40,7 +121,7 @@ async def on_message(message):
 
 
     #region START
-    if message.content.startswith("rstart") :
+    if message.content.lower().startswith("rstart") :
         f = open('players.json', 'r+', encoding='utf-8')
         fdata = json.load(f)
         farray = fdata['players']
@@ -54,7 +135,7 @@ async def on_message(message):
         
         if not was_old:
             await message.channel.send('{}'.format(message.author.mention) + ", ton compte de serial entrepreneur vient d'être mis en ligne pour faire trembler le CAC40 !")
-            new_player = [message.author.id, message.author.name, 0, [], "", 0, 0, 0, 0, ""]
+            new_player = [message.author.id, message.author.name, 0, [], "", 0, 0, 0, 0, 0]
             farray.append(new_player)
             f.seek(0)
             json.dump(fdata, f, indent=4)
@@ -66,7 +147,7 @@ async def on_message(message):
 
 
     #region Inventory
-    if message.content.startswith("rinv"):
+    if message.content.lower().startswith("rinv"):
         f = open('players.json', 'r+', encoding='utf-8')
         fdata = json.load(f)
         farray = fdata['players']
@@ -117,7 +198,7 @@ async def on_message(message):
 
 
     #region Daily
-    if message.content.startswith('rdaily'):
+    if message.content.lower().startswith('rdaily'):
         f = open("players.json", "r+", encoding="utf-8")
         fdata2 = json.load(f)
         farray = fdata2['players']
@@ -153,19 +234,19 @@ async def on_message(message):
 
 
     #region DarkNet
-    if message.content.startswith("rnet"):
+    if message.content.lower().startswith("rnet"):
         local_embed = discord.Embed(title="DarkNet - Datacenters et miners", description = "Achetez des workers pour miner de la crypto et débuter votre empire financier  <:stonksup:967517993162649621>", color=0xffef00)
-        local_embed.add_field(name="GeForce GTX 1060 : 20 RTC", value ="45 RTC/jour : rbuy1", inline=False)
-        local_embed.add_field(name="GeForce GTX 1080ti : 35 RTC", value="100 RTC/jour : rbuy2", inline=False)
-        local_embed.add_field(name="GeForce RTX 3080ti : 55 RTC", value="130 RTC/jour : rbuy3", inline=False)
-        local_embed.add_field(name="Rigs de minage : 200 RTC", value = "510 RTC/jour : rbuy4", inline=False)
+        local_embed.add_field(name="GeForce GTX 1060 : 20 RTC", value ="3 RTC/30min : rbuy1", inline=False)
+        local_embed.add_field(name="GeForce GTX 1080ti : 35 RTC", value="7 RTC/30min : rbuy2", inline=False)
+        local_embed.add_field(name="GeForce RTX 3080ti : 55 RTC", value="11 RTC/30min : rbuy3", inline=False)
+        local_embed.add_field(name="Rigs de minage : 200 RTC", value = "50 RTC/30min : rbuy4", inline=False)
         local_embed.set_thumbnail(url="https://s3.us-east-2.amazonaws.com/nomics-api/static/images/currencies/STONK5.png")
         await message.channel.send(embed = local_embed)
     #endregion
 
 
     #region rbuy1
-    if message.content.startswith("rbuy1"):
+    if message.content.lower().startswith("rbuy1"):
         f = open("players.json", "r+", encoding="utf-8")
         fdata = json.load(f)
         farray = fdata['players']
@@ -202,7 +283,7 @@ async def on_message(message):
 
     
     #region rbuy2
-    if message.content.startswith('rbuy2'):
+    if message.content.lower().startswith('rbuy2'):
         f = open("players.json", "r+", encoding="utf-8")
         fdata = json.load(f)
         farray = fdata['players']
@@ -238,7 +319,7 @@ async def on_message(message):
 
 
     #region rbuy3
-    if message.content.startswith('rbuy3'):
+    if message.content.lower().startswith('rbuy3'):
         f = open("players.json", "r+", encoding="utf-8")
         fdata = json.load(f)
         farray = fdata['players']
@@ -274,7 +355,7 @@ async def on_message(message):
 
     
     #region rbuy4
-    if message.content.startswith('rbuy4'):
+    if message.content.lower().startswith('rbuy4'):
         f = open("players.json", "r+", encoding="utf-8")
         fdata = json.load(f)
         farray = fdata['players']
@@ -310,7 +391,7 @@ async def on_message(message):
 
 
     #region Mining Command
-    if message.content.startswith('rmine'):
+    if message.content.lower().startswith('rmine'):
         f = open("players.json", "r+", encoding="utf-8")
         fdata = json.load(f)
         farray = fdata['players']
@@ -332,15 +413,14 @@ async def on_message(message):
             await message.channel.send('{}'.format(message.author.mention) + ", vous n'avez aucun miner ! Minage abandonné...")
             return
 
-        date = time.asctime(time.localtime())
-        current_day = date[0] + date[1] + date [2]
-        if located_player[9] != current_day:
-            given_coins = located_player[5] * 45 + located_player[6] * 100 + located_player[7] * 130 + located_player[8] * 510
+        current_time = time.time()
+        if located_player[9] - current_time <= - 1800:
+            given_coins = located_player[5] * 3 + located_player[6] * 7 + located_player[7] * 11 + located_player[8] * 50
             fdata['players'][index_target][2] += given_coins
             await message.channel.send('{}'.format(message.author.mention) + ", votre minage vous fais gagner " + str(given_coins) + "RTC <:rtc:967486256109994074>")
-            fdata['players'][index_target][9] = current_day
+            fdata['players'][index_target][9] = current_time
         else:
-            await message.channel.send('{}'.format(message.author.mention) + ", vous avez vidé vos miners, attendez jusqu'à demain que ceux-ci finisse de miner ! ")
+            await message.channel.send('{}'.format(message.author.mention) + ", vous avez vidé vos miners, attendez " + str(int((located_player[9] - current_time + 1800)// 60)) + " minutes que ceux-ci finissent de miner ! ")
 
         f.seek(0)
         json.dump(fdata, f, indent=4)
@@ -350,4 +430,48 @@ async def on_message(message):
     #endregion
 
 
+    #region ALLOOOOOO
+    if message.content.lower().startswith('rallo'):
+        await message.channel.send("ALLOOOOOOO, JE SUIS DELIIIIIIIINK, LIIIIIIIIIIIIIIIINK")
+        return
+    #endregion
+
+
+    #region News
+    if message.content.lower().startswith('rnews'):
+        local_embed= discord.Embed(title="Nouveautés du bot : Version 1.2 (Last Commit : 24/04/22 à 13h00)", description="By Lopinosaurus", color=0xffef00)
+        local_embed.add_field(name="rnet : Changement des revenus de minage", value="Le minage rapporte une somme différente", inline=False)
+        local_embed.add_field(name="rmine : Changement des occurences de minage", value="Vous pouvez maintenant miner toutes les 30 minutes", inline=False)
+        local_embed.add_field(name="rmine : Ajout d'un compteur", value="en faisant rmine, vous voyez dans combien de temps vous pouvez de nouveaux miner", inline=False)
+
+        await message.channel.send(embed = local_embed)
+        return
+    #endregion
+
+
+    #region Market Command
+    if message.content.lower().startswith('rmarket'):
+        auctiondb = open ("auction.json" ,"r+", encoding="utf-8")
+        ahdata = json.load(auctiondb)
+        aharray = ahdata["auction"]
+        nft1 = aharray[0].replace(".png", "")
+        nft2 = aharray[1].replace(".png", "")
+        nft3 = aharray[2].replace(".png", "")
+        market_embed = discord.Embed(title="NFT du jour à vendre : ", description="Marché NFT du " + time.asctime(time.localtime()), color=0xffef00)
+        file = discord.File("market.png", filename="market.png")
+        market_embed.add_field(name=nft1, value="Mise de départ : 1000 RTC <:rtc:967486256109994074> ")
+        market_embed.add_field(name=nft2, value="Mise de départ : 1000 RTC <:rtc:967486256109994074> ")
+        market_embed.add_field(name=nft3, value="Mise de départ : 1000 RTC <:rtc:967486256109994074> ")
+        market_embed.set_image(url="attachment://market.png")
+        await message.channel.send(file = file, embed = market_embed)
+        return
+
+    #endregion
+
 client.run(TOKEN)
+
+# Todo : ratio command (give RTC to another member)
+#      : rmarket (show nft market, refresh once a day, pick from market directory)
+#      : rnft<number> (bid nft from market)
+#      : rshow <name> (show your <name> nft)
+#      : rtrade <@member> (trade nft with another member)
