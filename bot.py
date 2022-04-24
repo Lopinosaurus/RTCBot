@@ -2,6 +2,7 @@
 # region Library
 import os
 
+import shutil
 from PIL import Image
 import discord
 from discord.ext import tasks
@@ -15,6 +16,7 @@ load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
 client = discord.Client()
+
 
 
 # region Events and Loop Async Functions
@@ -31,9 +33,8 @@ async def task_loop(seconds=60):
     _channel = client.get_channel(967395369296203786)
 
     #Checking new day at midnight
-    if str(_time[11]) +  str(_time[12]) + str(_time[14]) + str(_time[15]) == "0000":
+    if str(_time[11]) +  str(_time[12]) + str(_time[14]) + str(_time[15]) == "2354":
         # Avoiding recursive issues
-        #_time[15] = "n"
         marketdb = open("market.json", "r+", encoding="utf-8")
         mdata = json.load(marketdb)
         marray = mdata["market"]
@@ -41,8 +42,9 @@ async def task_loop(seconds=60):
         nfn1 = random.randrange(len(marray) - 1)
         nfn2 = random.randrange(len(marray) - 1)
         nfn3 = random.randrange(len(marray) - 1)
+        
 
-        while nfn2 == nfn3 or nfn2 == nfn1 or nfn3 == nfn1:
+        while nfn2 == nfn3 or nfn2 == nfn1 or nfn3 == nfn1 :
             nfn2 = random.randrange(len(marray) - 1)
             nfn3 = random.randrange(len(marray) - 1)
 
@@ -56,6 +58,9 @@ async def task_loop(seconds=60):
         ahdata = json.load(auctiondb)
         aharray = ahdata["auction"]
 
+        old_ah1 = aharray[0]
+        old_ah2 = aharray[1]
+        old_ah3 = aharray[2]
         aharray[0] = nft1
         aharray[1] = nft2
         aharray[2] = nft3
@@ -93,6 +98,79 @@ async def task_loop(seconds=60):
         market_embed.add_field(name=nft3, value="Mise de départ : 1000 RTC <:rtc:967486256109994074> ")
         market_embed.set_image(url="attachment://market.png")
         await _channel.send(file = file, embed = market_embed)
+
+        auctiondb = open("auction.json", "r+", encoding="utf-8")
+        ahdata = json.load(auctiondb)
+        aharray = ahdata["auction"]
+
+        # Taking Buyers IDs
+        id1 = aharray[3][1]
+        id2 = aharray[4][1]
+        id3 = aharray[5][1]
+        m1 = aharray[3][0]
+        m2 = aharray[4][0]
+        m3 = aharray[5][0]
+
+        
+
+        # Resetting Auction House
+        ahdata["auction"][3][0] = 1000
+        ahdata["auction"][4][0] = 1000
+        ahdata["auction"][5][0] = 1000
+        ahdata["auction"][3][1] = 0
+        ahdata["auction"][4][1] = 0
+        ahdata["auction"][5][1] = 0
+        ahdata["auction"][3][2] = "Personne"
+        ahdata["auction"][4][2] = "Personne"
+        ahdata["auction"][5][2] = "Personne"
+
+        auctiondb.seek(0)
+        json.dump(ahdata, auctiondb, indent=4)
+        auctiondb.truncate()
+        
+        auctiondb.close()
+
+        f = open("players.json", "r+", encoding="utf-8")
+        fdata = json.load(f)
+        farray = fdata['players']
+        located_player = []
+        index_target = 0
+        # Finding targeted player in players json array
+        for i in range (len(farray)):
+            if id1 in farray[i]:
+                located_player = farray[i]
+                index_target = i
+        # Player has been located
+
+        fdata['players'][index_target][2] -= m1
+        fdata['players'][index_target][3].append(old_ah1)
+        shutil.move(old_ah1, "bought/" + old_ah1.replace("nft/", ""))
+
+        for i in range (len(farray)):
+            if id2 in farray[i]:
+                located_player = farray[i]
+                index_target = i
+
+        fdata['players'][index_target][2] -= m2
+        fdata['players'][index_target][3].append(old_ah2)
+        shutil.move(old_ah2, "bought/" + old_ah2.replace("nft/", ""))
+
+        for i in range (len(farray)):
+            if id3 in farray[i]:
+                located_player = farray[i]
+                index_target = i
+
+        fdata['players'][index_target][2] -= m3
+        fdata['players'][index_target][3].append(old_ah3)
+        shutil.move(old_ah3, "bought/" + old_ah3.replace("nft/", ""))
+
+        f.seek(0)
+        json.dump(fdata, f, indent=4)
+        f.truncate()
+        
+        f.close()
+
+        await _channel.send("Les transactions ont été faites ! Bravo à tous les entrepreneurs de la journée ! \n Voici Maintenant le nouveau market :")
         return
 
 
@@ -439,10 +517,10 @@ async def on_message(message):
 
     #region News
     if message.content.lower().startswith('rnews'):
-        local_embed= discord.Embed(title="Nouveautés du bot : Version 1.2 (Last Commit : 24/04/22 à 13h00)", description="By Lopinosaurus", color=0xffef00)
-        local_embed.add_field(name="rnet : Changement des revenus de minage", value="Le minage rapporte une somme différente", inline=False)
-        local_embed.add_field(name="rmine : Changement des occurences de minage", value="Vous pouvez maintenant miner toutes les 30 minutes", inline=False)
-        local_embed.add_field(name="rmine : Ajout d'un compteur", value="en faisant rmine, vous voyez dans combien de temps vous pouvez de nouveaux miner", inline=False)
+        local_embed= discord.Embed(title="Nouveautés du bot : Version 1.3 (Last Commit : 24/04/22 à 21h24)", description="By Lopinosaurus", color=0xffef00)
+        local_embed.add_field(name="rmarket : " , value = "Quand qqn mise, son nom s'affiche sur le market et la mise du nft concerné est modif", inline=False)
+        local_embed.add_field(name="rbid :" , value = "Permet de miser sur une nft si vous avez assez d'argent et que votre mise est plus grosse que l'actuelle", inline=False)
+        local_embed.add_field(name="Évènement à minuit :", value="les vaincqueurs des enchères perdent l'argent misé, et gagnent les nft dans leur inventaire. Le nouveau market est affiché par le bot, les nft choisies sont tirées au sort", inline=False)
 
         await message.channel.send(embed = local_embed)
         return
@@ -457,14 +535,92 @@ async def on_message(message):
         nft1 = aharray[0].replace(".png", "")
         nft2 = aharray[1].replace(".png", "")
         nft3 = aharray[2].replace(".png", "")
-        market_embed = discord.Embed(title="NFT du jour à vendre : ", description="Marché NFT du " + time.asctime(time.localtime()), color=0xffef00)
+        market_embed = discord.Embed(title="NFT du jour à vendre : ", description="Marché NFT du " + time.asctime(time.localtime()) + "\n Miser sur un NFT : rbid <numero du nft> <mise en RTC>", color=0xffef00)
         file = discord.File("market.png", filename="market.png")
-        market_embed.add_field(name=nft1, value="Mise de départ : 1000 RTC <:rtc:967486256109994074> ")
-        market_embed.add_field(name=nft2, value="Mise de départ : 1000 RTC <:rtc:967486256109994074> ")
-        market_embed.add_field(name=nft3, value="Mise de départ : 1000 RTC <:rtc:967486256109994074> ")
+        market_embed.add_field(name=nft1, value="Mise actuelle : " + str(aharray[3][0]) + " RTC <:rtc:967486256109994074> \n Miseur : " + str(aharray[3][2]))
+        market_embed.add_field(name=nft2, value="Mise actuelle : " + str(aharray[4][0]) + " RTC <:rtrtc:967486256109994074> \n Miseur : " + aharray[4][2])
+        market_embed.add_field(name=nft3, value="Mise actuelle : " + str(aharray[5][0]) + " RTC <:rtc:967486256109994074> \n Miseur : " + aharray[5][2])
         market_embed.set_image(url="attachment://market.png")
         await message.channel.send(file = file, embed = market_embed)
         return
+
+    #endregion
+
+
+    #region Bid Command
+    if message.content.lower().startswith('rbid'):
+        parsed_msg = message.content.split()
+        f = open("players.json", "r+", encoding="utf-8")
+        fdata = json.load(f)
+        farray = fdata['players']
+        located_player = []
+        index_target = 0
+        was_old = False
+        # Finding targeted player in players json array
+        for i in range (len(farray)):
+            if message.author.id in farray[i]:
+                located_player = farray[i]
+                index_target = i
+                was_old = True
+        # Player has been located
+        if not was_old:
+            await message.channel.send('{}'.format(message.author.mention) + ", créez un compte RTC pour faire bouger la blockchain ! --> rstart")
+            return
+
+        if int(parsed_msg[2]) > located_player[2]:
+            await message.channel.send('{}'.format(message.author.mention) + ", tu n'as pas assez de thunasse, revient plus tard jeune entrepreneur !")
+            return
+        f.close()
+
+        auctiondb = open ("auction.json" , "r+", encoding="utf-8")
+        ahdata = json.load(auctiondb)
+        aharray = ahdata["auction"]
+        
+
+
+        if parsed_msg[1] == None or parsed_msg[2] == None:
+            await message.channel.send('{}'.format(message.author.mention) + ", ta commande est invalide. Pour miser sur une NFT, fais rbid <numero de la nft> <nombre de RTC>")
+            return
+        
+        if str(parsed_msg[1]) == "1":
+            chosen_nft = 1
+            if int(parsed_msg[2]) <= aharray[3][0]:
+                await message.channel.send('{}'.format(message.author.mention) + ", ta mise est trop faible ! Mise actuelle pour ce NFT : " + str(aharray[3][0]) + " RTC <:rtc:967486256109994074>")
+                return
+            if int(parsed_msg[2]) > aharray[3][0]:
+                aharray[3][0] = int(parsed_msg[2])
+                aharray[3][1] = message.author.id
+                aharray[3][2] = message.author.name
+
+        if str(parsed_msg[1]) == "2":
+            chosen_nft = 2
+            if int(parsed_msg[2]) <= aharray[4][0]:
+                await message.channel.send('{}'.format(message.author.mention) + ", ta mise est trop faible ! Mise actuelle pour ce NFT : " + str(aharray[4][0]) + " RTC <:rtc:967486256109994074>")
+                return
+            if int(parsed_msg[2]) > aharray[4][0]:
+                aharray[4][0] = int(parsed_msg[2])
+                aharray[4][1] = message.author.id
+                aharray[4][2] = message.author.name
+
+        if str(parsed_msg[1]) == "3":
+            chosen_nft = 3
+            if int(parsed_msg[2]) <= aharray[4][0]:
+                await message.channel.send('{}'.format(message.author.mention) + ", ta mise est trop faible ! Mise actuelle pour ce NFT : " + str(aharray[5][0]) + " RTC <:rtc:967486256109994074>")
+                return
+            if int(parsed_msg[2]) > aharray[4][0]:
+                aharray[5][0] = int(parsed_msg[2])
+                aharray[5][1] = message.author.id
+                aharray[5][2] = message.author.name
+        
+        auctiondb.seek(0)
+        json.dump(ahdata, auctiondb, indent=4)
+        auctiondb.truncate()
+        auctiondb.close()
+
+        await message.channel.send('{}'.format(message.author.mention) + ", a misé " + parsed_msg[2] + " RTC <:rtc:967486256109994074> pour la " + parsed_msg[1] + "ème NFT ! Qui ira concurrencer cet entrepreneur de GENIE ??")
+        return
+
+
 
     #endregion
 
