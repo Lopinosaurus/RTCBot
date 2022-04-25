@@ -1,5 +1,6 @@
 # bot.py
 # region Library
+from ast import parse
 import os
 
 import shutil
@@ -314,10 +315,10 @@ async def on_message(message):
     #region DarkNet
     if message.content.lower().startswith("rnet"):
         local_embed = discord.Embed(title="DarkNet - Datacenters et miners", description = "Achetez des workers pour miner de la crypto et débuter votre empire financier  <:stonksup:967517993162649621>", color=0xffef00)
-        local_embed.add_field(name="GeForce GTX 1060 : 20 RTC", value ="3 RTC/30min : rbuy1", inline=False)
-        local_embed.add_field(name="GeForce GTX 1080ti : 35 RTC", value="7 RTC/30min : rbuy2", inline=False)
-        local_embed.add_field(name="GeForce RTX 3080ti : 55 RTC", value="11 RTC/30min : rbuy3", inline=False)
-        local_embed.add_field(name="Rigs de minage : 200 RTC", value = "50 RTC/30min : rbuy4", inline=False)
+        local_embed.add_field(name="GeForce GTX 1060 : 20 RTC", value ="3 RTC/30min : rbuy1 <nombre de miners>", inline=False)
+        local_embed.add_field(name="GeForce GTX 1080ti : 35 RTC", value="7 RTC/30min : rbuy2 <nombre de miners>", inline=False)
+        local_embed.add_field(name="GeForce RTX 3080ti : 55 RTC", value="11 RTC/30min : rbuy3 <nombre de miners>", inline=False)
+        local_embed.add_field(name="Rigs de minage : 200 RTC", value = "50 RTC/30min : rbuy4 <nombre de miners>", inline=False)
         local_embed.set_thumbnail(url="https://s3.us-east-2.amazonaws.com/nomics-api/static/images/currencies/STONK5.png")
         await message.channel.send(embed = local_embed)
     #endregion
@@ -325,6 +326,7 @@ async def on_message(message):
 
     #region rbuy1
     if message.content.lower().startswith("rbuy1"):
+        parsed_msg = message.content.split()
         f = open("players.json", "r+", encoding="utf-8")
         fdata = json.load(f)
         farray = fdata['players']
@@ -342,19 +344,29 @@ async def on_message(message):
             await message.channel.send('{}'.format(message.author.mention) + ", créez un compte RTC pour faire bouger la blockchain ! --> rstart")
             return
         
-        if located_player[2] < 20:
+        try:
+            parsed_msg[1] = int(parsed_msg[1])
+            price = parsed_msg[1] * 20
+            if price == 0:
+                await message.channel.send('{}'.format(message.author.mention + ", tu ne peux pas acheter 0 miner cher entrepreneur !"))
+                return
+        except:
+            await message.channel.send('{}'.format(message.author.mention + ", nombre de miners invalide !"))
+            return
+
+        if located_player[2] < price:
             await message.channel.send('{}'.format(message.author.mention) + ", vous n'avez pas assez d'argent, demandez à ceux qui aident les gens dans le besoin.")
             return
         
-        fdata['players'][index_target][2] -= 20
-        fdata['players'][index_target][5] += 1
+        fdata['players'][index_target][2] -= price
+        fdata['players'][index_target][5] += parsed_msg[1]
 
         f.seek(0)
         json.dump(fdata, f, indent=4)
         f.truncate()
         f.close()
 
-        await message.channel.send('{}'.format(message.author.mention) + ", vous avez acheté une GeForce GTX 1060 !")
+        await message.channel.send('{}'.format(message.author.mention) + ", vous avez acheté" + str(parsed_msg[1]) + " GeForce GTX 1060 !")
         return
 
     #endregion
@@ -362,6 +374,7 @@ async def on_message(message):
     
     #region rbuy2
     if message.content.lower().startswith('rbuy2'):
+        parsed_msg = message.content.split()
         f = open("players.json", "r+", encoding="utf-8")
         fdata = json.load(f)
         farray = fdata['players']
@@ -379,25 +392,36 @@ async def on_message(message):
             await message.channel.send('{}'.format(message.author.mention) + ", créez un compte RTC pour faire bouger la blockchain ! --> rstart")
             return
         
-        if located_player[2] < 35:
+        try:
+            parsed_msg[1] = int(parsed_msg[1])
+            price = parsed_msg[1] * 35
+            if price == 0:
+                await message.channel.send('{}'.format(message.author.mention + ", tu ne peux pas acheter 0 miner cher entrepreneur !"))
+                return
+        except:
+            await message.channel.send('{}'.format(message.author.mention + ", nombre de miners invalide !"))
+            return
+
+        if located_player[2] < price:
             await message.channel.send('{}'.format(message.author.mention) + ", vous n'avez pas assez d'argent, demandez à ceux qui aident les gens dans le besoin.")
             return
         
-        fdata['players'][index_target][2] -= 35
-        fdata['players'][index_target][6] += 1
+        fdata['players'][index_target][2] -= price
+        fdata['players'][index_target][6] += parsed_msg[1]
 
         f.seek(0)
         json.dump(fdata, f, indent=4)
         f.truncate()
         f.close()
 
-        await message.channel.send('{}'.format(message.author.mention) + ", vous avez acheté une GeForce GTX 1080ti !")
+        await message.channel.send('{}'.format(message.author.mention) + ", vous avez acheté" + str(parsed_msg[1]) + " GeForce GTX 1080ti !")
         return
     #endregion
 
 
     #region rbuy3
     if message.content.lower().startswith('rbuy3'):
+        parsed_msg = message.content.split()
         f = open("players.json", "r+", encoding="utf-8")
         fdata = json.load(f)
         farray = fdata['players']
@@ -415,25 +439,37 @@ async def on_message(message):
             await message.channel.send('{}'.format(message.author.mention) + ", créez un compte RTC pour faire bouger la blockchain ! --> rstart")
             return
         
+
+        try:
+            parsed_msg[1] = int(parsed_msg[1])
+            price = parsed_msg[1] * 55
+            if price == 0:
+                await message.channel.send('{}'.format(message.author.mention + ", tu ne peux pas acheter 0 miner cher entrepreneur !"))
+                return
+        except:
+            await message.channel.send('{}'.format(message.author.mention + ", nombre de miners invalide !"))
+            return
+
         if located_player[2] < 55:
             await message.channel.send('{}'.format(message.author.mention) + ", vous n'avez pas assez d'argent, demandez à ceux qui aident les gens dans le besoin.")
             return
         
-        fdata['players'][index_target][2] -= 55
-        fdata['players'][index_target][7] += 1
+        fdata['players'][index_target][2] -= price
+        fdata['players'][index_target][7] += parsed_msg[1]
 
         f.seek(0)
         json.dump(fdata, f, indent=4)
         f.truncate()
         f.close()
 
-        await message.channel.send('{}'.format(message.author.mention) + ", vous avez acheté une GeForce RTX 3080ti !")
+        await message.channel.send('{}'.format(message.author.mention) + ", vous avez acheté" + str(parsed_msg[1]) + " GeForce RTX 3080ti !")
         return
     #endregion
 
     
     #region rbuy4
     if message.content.lower().startswith('rbuy4'):
+        parsed_msg = message.content.split()
         f = open("players.json", "r+", encoding="utf-8")
         fdata = json.load(f)
         farray = fdata['players']
@@ -451,19 +487,29 @@ async def on_message(message):
             await message.channel.send('{}'.format(message.author.mention) + ", créez un compte RTC pour faire bouger la blockchain ! --> rstart")
             return
         
-        if located_player[2] < 200:
+        try:
+            parsed_msg[1] = int(parsed_msg[1])
+            price = parsed_msg[1] * 200
+            if price == 0:
+                await message.channel.send('{}'.format(message.author.mention + ", tu ne peux pas acheter 0 miner cher entrepreneur !"))
+                return
+        except:
+            await message.channel.send('{}'.format(message.author.mention + ", nombre de miners invalide !"))
+            return        
+
+        if located_player[2] < price:
             await message.channel.send('{}'.format(message.author.mention) + ", vous n'avez pas assez d'argent, demandez à ceux qui aident les gens dans le besoin.")
             return
         
-        fdata['players'][index_target][2] -= 200
-        fdata['players'][index_target][8] += 1
+        fdata['players'][index_target][2] -= price
+        fdata['players'][index_target][8] += parsed_msg[1]
 
         f.seek(0)
         json.dump(fdata, f, indent=4)
         f.truncate()
         f.close()
 
-        await message.channel.send('{}'.format(message.author.mention) + ", vous avez acheté un rigs de minage !")
+        await message.channel.send('{}'.format(message.author.mention) + ", vous avez acheté " + str(parsed_msg[1]) + " rigs de minage !")
         return
     #endregion
 
