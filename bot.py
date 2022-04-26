@@ -32,7 +32,7 @@ async def task_loop(seconds=60):
     _channel = client.get_channel(967395369296203786)
 
     #Checking new day at midnight
-    if str(_time[11]) +  str(_time[12]) + str(_time[14]) + str(_time[15]) == "1544":
+    if str(_time[11]) +  str(_time[12]) + str(_time[14]) + str(_time[15]) == "0000":
         auctiondb = open("auction.json", "r+", encoding="utf-8")
         ahdata = json.load(auctiondb)
         aharray = ahdata["auction"]
@@ -236,7 +236,7 @@ async def on_message(message):
 
     #region HELP
     if message.content.lower().startswith("rhelp"):
-        local_embed = discord.Embed(title='Help Menu', description="Liste des commandes disponibles (Version 1.6 du RTCBot)", color=0xffef00)
+        local_embed = discord.Embed(title='Help Menu', description="Liste des commandes disponibles (Version 1.8 du RTCBot)", color=0xffef00)
         local_embed.add_field(name="rstart", value="Ouvre un portefeuille de crypto-monnaie et débute votre aventure de sérial-entrepreneur.", inline=False)
         local_embed.add_field(name="rinv", value="Montre le contenu de votre portefeuille de digital marketeux", inline=False)
         local_embed.add_field(name="rdaily", value="Demande à Elon Musk de vous verser votre part quotidienne de crypto-monnaie", inline=False)
@@ -245,7 +245,9 @@ async def on_message(message):
         local_embed.add_field(name="rmarket", value="Montre le marché quotidien des NFT", inline=False)
         local_embed.add_field(name="rbid <num du nft> <mise en rtc>", value="Pose une enchère sur le NFT choisi et montre votre supériorité. Si vous êtes le miseur en tête à 00h; vous emportez le NFT.", inline=False)
         local_embed.add_field(name="ratio <@membre> <prix en rtc>", value="Transfert direct entre compte via un ratio amical (ou pas)", inline=False)
-        local_embed.add_field(name="En développement : ", value="rnft, rshow, rtrade", inline=False)
+        local_embed.add_field(name="rnft <nom du nft>", value="Montre le NFT demandé et son bg de propriétaire", inline=False)
+        local_embed.add_field(name="rlist", value="Liste tous les NFT présents sur ce discord d'entrepreneurs de génie du web", inline=False)
+        local_embed.add_field(name="En développement : ", value="rtrade", inline=False)
         local_embed.add_field(name="LE BOT EST EN DEV", value="Les commandes sont en constant changement, et de nouvelles sont en rajout", inline=False)
         
         await message.channel.send(embed = local_embed)
@@ -616,11 +618,13 @@ async def on_message(message):
 
     #region News
     if message.content.lower().startswith('rnews'):
-        local_embed= discord.Embed(title="Nouveautés du bot : Version 1.6 (Last Commit : 26/04/22 à 16h09)", description="By Lopinosaurus", color=0xffef00)
+        local_embed= discord.Embed(title="Nouveautés du bot : Version 1.8 (Last Commit : 26/04/22 à 18h39)", description="By Lopinosaurus", color=0xffef00)
         local_embed.add_field(name="rmarket : " , value = "Quand qqn mise, son nom s'affiche sur le market et la mise du nft concerné est modif", inline=False)
-        local_embed.add_field(name="rbid :" , value = "Permet de miser sur une nft si vous avez assez d'argent et que votre mise est plus grosse que l'actuelle", inline=False)
+        local_embed.add_field(name="rbid <num du nft> <mise en rtc> :" , value = "Permet de miser sur une nft si vous avez assez d'argent et que votre mise est plus grosse que l'actuelle", inline=False)
         local_embed.add_field(name="rbuy<num> <nombre> :" , value = "Vous devez maintenant spécifier combien de miners vous achetez", inline=False)
         local_embed.add_field(name="ratio <@membre> <prix en rtc>", value="Donne directement du RTC à la personne pinged", inline=False)
+        local_embed.add_field(name="rnft <nom du nft>:" , value = "Permet de voir le NFT noté", inline=False)
+        local_embed.add_field(name="rlist :" , value = "Liste l'ensemble des NFT implémentés par série de sortie", inline=False)
         local_embed.add_field(name="Évènement à minuit :", value="Les vainqueurs des enchères perdent l'argent misé, et gagnent les nft dans leur inventaire. Le nouveau market est affiché par le bot, les nft choisies sont tirées au sort", inline=False)
 
         await message.channel.send(embed = local_embed)
@@ -790,6 +794,60 @@ async def on_message(message):
         
     #endregion
 
+
+    #region NFT Viewer
+    if message.content.lower().startswith('rnft'):
+        parsed_msg = message.content.split()
+        if len(parsed_msg) < 2:
+            await message.channel.send('{}'.format(message.author.mention, ", tu dois spécifier quelle NFT tu veux voir ! Commande : rnft <nom du nft>"))
+            return
+        
+        try:
+            if "nft/" in parsed_msg[1]:
+                await message.channel.send("Je ne peux pas trouver le fichier si tu spécifies nft/ ! ")
+                return
+
+            if ".png" in parsed_msg[1]:
+                local_file = discord.File("nft/" + parsed_msg[1], filename=parsed_msg[1])
+                filename = "nft/" + parsed_msg[1]
+            else:
+                local_file = discord.File("nft/" + parsed_msg[1] + ".png", filename=parsed_msg[1]+ ".png")
+                filename = "nft/" + parsed_msg[1] + ".png"
+        except:
+            await message.channel.send('{}'.format(message.author.mention + ", le NFT spécifié n'existe pas ! (Fichier non existant)"))
+            return
+        
+
+        f = open("players.json", "r+", encoding="utf-8")
+        fdata = json.load(f)
+        farray = fdata['players']
+
+        nft_owner = "Personne"
+
+        for i in range(len(farray)):
+            if parsed_msg[1].replace(".png", "") in farray[i][3]:
+                nft_owner = farray[i][1]
+        
+        local_embed = discord.Embed(title="NFT : " + parsed_msg[1].replace(".png", ""), description="Appartient à : " + nft_owner, color=0xffef00)
+        local_embed.set_image(url="attachment://" + filename.replace("nft/", ""))
+        await message.channel.send(file=local_file, embed=local_embed)
+
+    #endregion
+
+
+    #region NFT Lister
+    if message.content.lower().startswith('rlist'):
+        nft_db = open("nft_db.json", "r", encoding="utf-8")
+        nft_data = json.load(nft_db)
+        nft_array = nft_data["nft_db"]
+
+        local_embed = discord.Embed(title="Liste des NFT actuellement implémentées : ", color=0xffef00)
+        for nft_name in nft_array:
+            local_embed.add_field(name = "Série 1 :", value=nft_name.replace(".png", ""))
+        
+        nft_db.close()
+        await message.channel.send(embed = local_embed)
+    #endregion
 
     
 
