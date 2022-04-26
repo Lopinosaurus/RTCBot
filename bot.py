@@ -236,7 +236,7 @@ async def on_message(message):
 
     #region HELP
     if message.content.lower().startswith("rhelp"):
-        local_embed = discord.Embed(title='Help Menu', description="Liste des commandes disponibles (Version 1.8 du RTCBot)", color=0xffef00)
+        local_embed = discord.Embed(title='Help Menu', description="Liste des commandes disponibles (Version 2.0 du RTCBot)", color=0xffef00)
         local_embed.add_field(name="rstart", value="Ouvre un portefeuille de crypto-monnaie et débute votre aventure de sérial-entrepreneur.", inline=False)
         local_embed.add_field(name="rinv", value="Montre le contenu de votre portefeuille de digital marketeux", inline=False)
         local_embed.add_field(name="rdaily", value="Demande à Elon Musk de vous verser votre part quotidienne de crypto-monnaie", inline=False)
@@ -352,7 +352,7 @@ async def on_message(message):
         date = time.asctime(time.localtime())
         current_day = date[0] + date[1] + date [2]
         if located_player[4] != current_day:
-            given_coins = random.randrange(5, 20)
+            given_coins = random.randrange(20, 50)
             fdata2['players'][index_target][2] += given_coins
             await message.channel.send('{}'.format(message.author.mention) + ", votre bonus quotidien vous donne " + str(given_coins) + "RTC <:rtc:967486256109994074>")
             fdata2['players'][index_target][4] = current_day
@@ -371,9 +371,9 @@ async def on_message(message):
     if message.content.lower().startswith("rnet"):
         local_embed = discord.Embed(title="DarkNet - Datacenters et miners", description = "Achetez des workers pour miner de la crypto et débuter votre empire financier  <:stonksup:967517993162649621>", color=0xffef00)
         local_embed.add_field(name="GeForce GTX 1060 : 20 RTC", value ="3 RTC/30min : rbuy1 <nombre de miners>", inline=False)
-        local_embed.add_field(name="GeForce GTX 1080ti : 35 RTC", value="7 RTC/30min : rbuy2 <nombre de miners>", inline=False)
-        local_embed.add_field(name="GeForce RTX 3080ti : 55 RTC", value="11 RTC/30min : rbuy3 <nombre de miners>", inline=False)
-        local_embed.add_field(name="Rigs de minage : 200 RTC", value = "50 RTC/30min : rbuy4 <nombre de miners>", inline=False)
+        local_embed.add_field(name="GeForce GTX 1080ti : 35 RTC", value="6 RTC/30min : rbuy2 <nombre de miners>", inline=False)
+        local_embed.add_field(name="GeForce RTX 3080ti : 55 RTC", value="9 RTC/30min : rbuy3 <nombre de miners>", inline=False)
+        local_embed.add_field(name="Rigs de minage : 200 RTC", value = "40 RTC/30min : rbuy4 <nombre de miners>", inline=False)
         local_embed.set_thumbnail(url="https://s3.us-east-2.amazonaws.com/nomics-api/static/images/currencies/STONK5.png")
         await message.channel.send(embed = local_embed)
     #endregion
@@ -588,18 +588,34 @@ async def on_message(message):
             await message.channel.send('{}'.format(message.author.mention) + ", créez un compte RTC pour faire bouger la blockchain ! --> rstart")
             return
         
+        current_time = time.time()
+        luck = random.randrange(4)
+        perc = random.randrange(15, 40)
+        pour = "%"
+
         if located_player[5] + located_player[6] + located_player[7] + located_player[8] == 0:
-            await message.channel.send('{}'.format(message.author.mention) + ", vous n'avez aucun miner ! Minage abandonné...")
+                await message.channel.send('{}'.format(message.author.mention) + ", vous n'avez aucun miner ! Minage abandonné...")
+                return
+
+        if not located_player[9] - current_time <= - 1800:
+            await message.channel.send('{}'.format(message.author.mention) + ", vous avez vidé vos miners, attendez " + str(int((located_player[9] - current_time + 1800)// 60)) + " minutes que ceux-ci finissent de miner ! ")
             return
 
-        current_time = time.time()
-        if located_player[9] - current_time <= - 1800:
-            given_coins = located_player[5] * 3 + located_player[6] * 7 + located_player[7] * 11 + located_player[8] * 50
+        if luck != 4 :
+            given_coins = located_player[5] * 3 + located_player[6] * 6 + located_player[7] * 9 + located_player[8] * 40
             fdata['players'][index_target][2] += given_coins
             await message.channel.send('{}'.format(message.author.mention) + ", votre minage vous fais gagner " + str(given_coins) + "RTC <:rtc:967486256109994074>")
             fdata['players'][index_target][9] = current_time
-        else:
-            await message.channel.send('{}'.format(message.author.mention) + ", vous avez vidé vos miners, attendez " + str(int((located_player[9] - current_time + 1800)// 60)) + " minutes que ceux-ci finissent de miner ! ")
+            
+        
+        if luck == 4:
+            if located_player[8] > 0:
+                fdata['players'][index_target][8] -= int(perc/100 * fdata['players'][index_target][8])
+                given_coins = located_player[5] * 3 + located_player[6] * 6 + located_player[7] * 9
+                fdata['players'][index_target][9] = current_time
+                fdata['players'][index_target][2] += given_coins
+                await message.channel.send('{}'.format(message.author.mention + ", un lapin a rongé les fils de votre data center ! Vous perdez " + str(perc) + pour +" de vos rigs, et ils sont inefficaces pour ce minage !"))
+                await message.channel.send("Le reste de votre minage vous fais gagner " + str(given_coins) + "RTC <:rtc:967486256109994074>")
 
         f.seek(0)
         json.dump(fdata, f, indent=4)
@@ -618,13 +634,15 @@ async def on_message(message):
 
     #region News
     if message.content.lower().startswith('rnews'):
-        local_embed= discord.Embed(title="Nouveautés du bot : Version 1.8 (Last Commit : 26/04/22 à 18h39)", description="By Lopinosaurus", color=0xffef00)
+        local_embed= discord.Embed(title="Nouveautés du bot : Version 2.0 (Last Commit : 26/04/22 à 23h53)", description="By Lopinosaurus", color=0xffef00)
         local_embed.add_field(name="rmarket : " , value = "Quand qqn mise, son nom s'affiche sur le market et la mise du nft concerné est modif", inline=False)
         local_embed.add_field(name="rbid <num du nft> <mise en rtc> :" , value = "Permet de miser sur une nft si vous avez assez d'argent et que votre mise est plus grosse que l'actuelle", inline=False)
         local_embed.add_field(name="rbuy<num> <nombre> :" , value = "Vous devez maintenant spécifier combien de miners vous achetez", inline=False)
         local_embed.add_field(name="ratio <@membre> <prix en rtc>", value="Donne directement du RTC à la personne pinged", inline=False)
         local_embed.add_field(name="rnft <nom du nft>:" , value = "Permet de voir le NFT noté", inline=False)
         local_embed.add_field(name="rlist :" , value = "Liste l'ensemble des NFT implémentés par série de sortie", inline=False)
+        local_embed.add_field(name="NOUVEAUX PRIX SUR LE DARKNET :" , value = "Les gains des miners ont été modifié", inline=False)
+        local_embed.add_field(name="Évènement unluncky :" , value = "Vous pouvez perdre entre 15% et 40% de vos rigs de minage" , inline=False)
         local_embed.add_field(name="Évènement à minuit :", value="Les vainqueurs des enchères perdent l'argent misé, et gagnent les nft dans leur inventaire. Le nouveau market est affiché par le bot, les nft choisies sont tirées au sort", inline=False)
 
         await message.channel.send(embed = local_embed)
@@ -853,3 +871,8 @@ async def on_message(message):
 
 client.run(TOKEN)
 
+# Todo : ratio command (give RTC to another member)
+#      : rmarket (show nft market, refresh once a day, pick from market directory)
+#      : rnft<number> (bid nft from market)
+#      : rshow <name> (show your <name> nft)
+#      : rtrade <@member> (trade nft with another member)
