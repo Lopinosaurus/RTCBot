@@ -1,9 +1,7 @@
 # bot.py
 # region Library
-from ast import parse
 import os
 
-import shutil
 from PIL import Image
 import discord
 from discord.ext import tasks
@@ -34,8 +32,134 @@ async def task_loop(seconds=60):
     _channel = client.get_channel(967395369296203786)
 
     #Checking new day at midnight
-    if str(_time[11]) +  str(_time[12]) + str(_time[14]) + str(_time[15]) == "2354":
-        # Avoiding recursive issues
+    if str(_time[11]) +  str(_time[12]) + str(_time[14]) + str(_time[15]) == "1544":
+        auctiondb = open("auction.json", "r+", encoding="utf-8")
+        ahdata = json.load(auctiondb)
+        aharray = ahdata["auction"]
+
+        nft1_sold = False
+        nft2_sold = False
+        nft3_sold = False
+
+        # FIRST NFT GIFT AND REMOVING MONEY
+        if not aharray[3][1] == -1:
+            f = open("players.json", "r+", encoding="utf-8")
+            fdata = json.load(f)
+            farray = fdata['players']
+            index_target = -1
+
+            for i in range (len(farray)):
+                if aharray[3][1] in farray[i]:
+                    index_target = i
+            
+            if fdata['players'][index_target][2] >= aharray[3][0]:
+                fdata['players'][index_target][3].append(aharray[0].replace(".png", ""))
+                fdata['players'][index_target][2] -= aharray[3][0]
+                nft1_sold = True
+            else:
+                await _channel.send(fdata['players'][index_target][1] + " n'avait pas assez d'argent au moment de la vente, elle est donc annulée !" )
+
+            f.seek(0)
+            json.dump(fdata, f, indent=4)
+            f.truncate()
+            f.close()
+
+
+        # SECOND NFT GIFT AND REMOVING MONEY
+        if not aharray[4][1] == -1:
+            f = open("players.json", "r+", encoding="utf-8")
+            fdata = json.load(f)
+            farray = fdata['players']
+            index_target = -1
+
+            for i in range (len(farray)):
+                if aharray[4][1] in farray[i]:
+                    index_target = i
+
+            if fdata['players'][index_target][2] >= aharray[4][0]:
+                fdata['players'][index_target][3].append(aharray[1].replace(".png", ""))
+                fdata['players'][index_target][2] -= aharray[4][0]
+                nft2_sold = True
+            else:
+                await _channel.send(fdata['players'][index_target][1] + " n'avait pas assez d'argent au moment de la vente, elle est donc annulée !" )
+
+            f.seek(0)
+            json.dump(fdata, f, indent=4)
+            f.truncate()
+            f.close()
+            
+        
+
+        # THIRD NFT GIFT AND REMOVING MONEY
+        if not aharray[5][1] == -1:
+            f = open("players.json", "r+", encoding="utf-8")
+            fdata = json.load(f)
+            farray = fdata['players']
+            index_target = -1
+
+            for i in range (len(farray)):
+                if aharray[5][1] in farray[i]:
+                    index_target = i
+
+            if fdata['players'][index_target][2] >= aharray[5][0]:
+                fdata['players'][index_target][3].append(aharray[2].replace(".png", ""))
+                fdata['players'][index_target][2] -= aharray[5][0]
+                nft3_sold = True
+            else:
+                await _channel.send(fdata['players'][index_target][1] + " n'avait pas assez d'argent au moment de la vente, elle est donc annulée !" )
+
+            f.seek(0)
+            json.dump(fdata, f, indent=4)
+            f.truncate()
+            f.close()
+            
+        
+        nft1 = aharray[0].replace("nft/", "")
+        nft2 = aharray[1].replace("nft/", "")
+        nft3 = aharray[2].replace("nft/", "")
+
+        auctiondb.close()
+
+
+        # DELETING FROM DATABASE THE NFTs
+        marketdb = open("market.json" , "r+", encoding="utf-8")
+        marketdata = json.load(marketdb)
+        
+        if nft1_sold :
+            marketdata["market"].remove(nft1)
+        if nft2_sold:
+            marketdata["market"].remove(nft2)
+        if nft3_sold:
+            marketdata["market"].remove(nft3)
+
+        marketdb.seek(0)
+        json.dump(marketdata, marketdb, indent=4)
+        marketdb.truncate()
+        marketdb.close()
+
+        # RESETING AND CREATING NEW AH
+        auctiondb = open("auction.json", "r+", encoding="utf-8")
+        ahdata = json.load(auctiondb)
+        aharray = ahdata["auction"]
+
+        ahdata["auction"][3][0] = 1000
+        ahdata["auction"][3][1] = -1
+        ahdata["auction"][3][2] = "Personne"
+        ahdata["auction"][4][0] = 1000
+        ahdata["auction"][4][1] = -1
+        ahdata["auction"][4][2] = "Personne"
+        ahdata["auction"][5][0] = 1000
+        ahdata["auction"][5][1] = -1
+        ahdata["auction"][5][2] = "Personne"
+        
+        
+        auctiondb.seek(0)
+        json.dump(ahdata, auctiondb, indent=4)
+        auctiondb.truncate()
+        auctiondb.close()
+        
+        
+        # Creating new market
         marketdb = open("market.json", "r+", encoding="utf-8")
         mdata = json.load(marketdb)
         marray = mdata["market"]
@@ -55,13 +179,11 @@ async def task_loop(seconds=60):
         nft3 = "nft/" + marray[nfn3]
 
         marketdb.close()
+
         auctiondb = open("auction.json", "r+", encoding="utf-8")
         ahdata = json.load(auctiondb)
         aharray = ahdata["auction"]
 
-        old_ah1 = aharray[0]
-        old_ah2 = aharray[1]
-        old_ah3 = aharray[2]
         aharray[0] = nft1
         aharray[1] = nft2
         aharray[2] = nft3
@@ -98,80 +220,9 @@ async def task_loop(seconds=60):
         market_embed.add_field(name=nft2, value="Mise de départ : 1000 RTC <:rtc:967486256109994074> ")
         market_embed.add_field(name=nft3, value="Mise de départ : 1000 RTC <:rtc:967486256109994074> ")
         market_embed.set_image(url="attachment://market.png")
+        await _channel.send("Les transactions ont été faites ! Bravo à tous les entrepreneurs de la journée ! \n Voici Maintenant le nouveau market :")
         await _channel.send(file = file, embed = market_embed)
 
-        auctiondb = open("auction.json", "r+", encoding="utf-8")
-        ahdata = json.load(auctiondb)
-        aharray = ahdata["auction"]
-
-        # Taking Buyers IDs
-        id1 = aharray[3][1]
-        id2 = aharray[4][1]
-        id3 = aharray[5][1]
-        m1 = aharray[3][0]
-        m2 = aharray[4][0]
-        m3 = aharray[5][0]
-
-        
-
-        # Resetting Auction House
-        ahdata["auction"][3][0] = 1000
-        ahdata["auction"][4][0] = 1000
-        ahdata["auction"][5][0] = 1000
-        ahdata["auction"][3][1] = 0
-        ahdata["auction"][4][1] = 0
-        ahdata["auction"][5][1] = 0
-        ahdata["auction"][3][2] = "Personne"
-        ahdata["auction"][4][2] = "Personne"
-        ahdata["auction"][5][2] = "Personne"
-
-        auctiondb.seek(0)
-        json.dump(ahdata, auctiondb, indent=4)
-        auctiondb.truncate()
-        
-        auctiondb.close()
-
-        f = open("players.json", "r+", encoding="utf-8")
-        fdata = json.load(f)
-        farray = fdata['players']
-        located_player = []
-        index_target = 0
-        # Finding targeted player in players json array
-        for i in range (len(farray)):
-            if id1 in farray[i]:
-                located_player = farray[i]
-                index_target = i
-        # Player has been located
-
-        fdata['players'][index_target][2] -= m1
-        fdata['players'][index_target][3].append(old_ah1)
-        shutil.move(old_ah1, "bought/" + old_ah1.replace("nft/", ""))
-
-        for i in range (len(farray)):
-            if id2 in farray[i]:
-                located_player = farray[i]
-                index_target = i
-
-        fdata['players'][index_target][2] -= m2
-        fdata['players'][index_target][3].append(old_ah2)
-        shutil.move(old_ah2, "bought/" + old_ah2.replace("nft/", ""))
-
-        for i in range (len(farray)):
-            if id3 in farray[i]:
-                located_player = farray[i]
-                index_target = i
-
-        fdata['players'][index_target][2] -= m3
-        fdata['players'][index_target][3].append(old_ah3)
-        shutil.move(old_ah3, "bought/" + old_ah3.replace("nft/", ""))
-
-        f.seek(0)
-        json.dump(fdata, f, indent=4)
-        f.truncate()
-        
-        f.close()
-
-        await _channel.send("Les transactions ont été faites ! Bravo à tous les entrepreneurs de la journée ! \n Voici Maintenant le nouveau market :")
         return
 
 
@@ -185,14 +236,16 @@ async def on_message(message):
 
     #region HELP
     if message.content.lower().startswith("rhelp"):
-        local_embed = discord.Embed(title='Help Menu', description="Liste des commandes disponibles (Version 1.2 du RTCBot)", color=0xffef00)
+        local_embed = discord.Embed(title='Help Menu', description="Liste des commandes disponibles (Version 1.6 du RTCBot)", color=0xffef00)
         local_embed.add_field(name="rstart", value="Ouvre un portefeuille de crypto-monnaie et débute votre aventure de sérial-entrepreneur.", inline=False)
         local_embed.add_field(name="rinv", value="Montre le contenu de votre portefeuille de digital marketeux", inline=False)
         local_embed.add_field(name="rdaily", value="Demande à Elon Musk de vous verser votre part quotidienne de crypto-monnaie", inline=False)
         local_embed.add_field(name="rnet", value="Montre le fameux marché noir de Feldup, où vous pouvez faire l'acquisition de mine(u)rs", inline=False)
         local_embed.add_field(name="rmine", value="Récolte les RTC minés par vos miners", inline=False)
         local_embed.add_field(name="rmarket", value="Montre le marché quotidien des NFT", inline=False)
-        local_embed.add_field(name="En développement : ", value="ratio, rnft, rshow, rtrade", inline=False)
+        local_embed.add_field(name="rbid <num du nft> <mise en rtc>", value="Pose une enchère sur le NFT choisi et montre votre supériorité. Si vous êtes le miseur en tête à 00h; vous emportez le NFT.", inline=False)
+        local_embed.add_field(name="ratio <@membre> <prix en rtc>", value="Transfert direct entre compte via un ratio amical (ou pas)", inline=False)
+        local_embed.add_field(name="En développement : ", value="rnft, rshow, rtrade", inline=False)
         local_embed.add_field(name="LE BOT EST EN DEV", value="Les commandes sont en constant changement, et de nouvelles sont en rajout", inline=False)
         
         await message.channel.send(embed = local_embed)
@@ -366,7 +419,7 @@ async def on_message(message):
         f.truncate()
         f.close()
 
-        await message.channel.send('{}'.format(message.author.mention) + ", vous avez acheté" + str(parsed_msg[1]) + " GeForce GTX 1060 !")
+        await message.channel.send('{}'.format(message.author.mention) + ", vous avez acheté " + str(parsed_msg[1]) + " GeForce GTX 1060 !")
         return
 
     #endregion
@@ -414,7 +467,7 @@ async def on_message(message):
         f.truncate()
         f.close()
 
-        await message.channel.send('{}'.format(message.author.mention) + ", vous avez acheté" + str(parsed_msg[1]) + " GeForce GTX 1080ti !")
+        await message.channel.send('{}'.format(message.author.mention) + ", vous avez acheté " + str(parsed_msg[1]) + " GeForce GTX 1080ti !")
         return
     #endregion
 
@@ -462,7 +515,7 @@ async def on_message(message):
         f.truncate()
         f.close()
 
-        await message.channel.send('{}'.format(message.author.mention) + ", vous avez acheté" + str(parsed_msg[1]) + " GeForce RTX 3080ti !")
+        await message.channel.send('{}'.format(message.author.mention) + ", vous avez acheté " + str(parsed_msg[1]) + " GeForce RTX 3080ti !")
         return
     #endregion
 
@@ -563,10 +616,12 @@ async def on_message(message):
 
     #region News
     if message.content.lower().startswith('rnews'):
-        local_embed= discord.Embed(title="Nouveautés du bot : Version 1.3 (Last Commit : 24/04/22 à 21h24)", description="By Lopinosaurus", color=0xffef00)
+        local_embed= discord.Embed(title="Nouveautés du bot : Version 1.6 (Last Commit : 26/04/22 à 16h09)", description="By Lopinosaurus", color=0xffef00)
         local_embed.add_field(name="rmarket : " , value = "Quand qqn mise, son nom s'affiche sur le market et la mise du nft concerné est modif", inline=False)
         local_embed.add_field(name="rbid :" , value = "Permet de miser sur une nft si vous avez assez d'argent et que votre mise est plus grosse que l'actuelle", inline=False)
-        local_embed.add_field(name="Évènement à minuit :", value="les vaincqueurs des enchères perdent l'argent misé, et gagnent les nft dans leur inventaire. Le nouveau market est affiché par le bot, les nft choisies sont tirées au sort", inline=False)
+        local_embed.add_field(name="rbuy<num> <nombre> :" , value = "Vous devez maintenant spécifier combien de miners vous achetez", inline=False)
+        local_embed.add_field(name="ratio <@membre> <prix en rtc>", value="Donne directement du RTC à la personne pinged", inline=False)
+        local_embed.add_field(name="Évènement à minuit :", value="Les vainqueurs des enchères perdent l'argent misé, et gagnent les nft dans leur inventaire. Le nouveau market est affiché par le bot, les nft choisies sont tirées au sort", inline=False)
 
         await message.channel.send(embed = local_embed)
         return
@@ -602,6 +657,7 @@ async def on_message(message):
         located_player = []
         index_target = 0
         was_old = False
+        possible_bids = [1,2,3]
         # Finding targeted player in players json array
         for i in range (len(farray)):
             if message.author.id in farray[i]:
@@ -624,7 +680,7 @@ async def on_message(message):
         
 
 
-        if parsed_msg[1] == None or parsed_msg[2] == None:
+        if int(parsed_msg[1]) not in possible_bids or parsed_msg[2] == None:
             await message.channel.send('{}'.format(message.author.mention) + ", ta commande est invalide. Pour miser sur une NFT, fais rbid <numero de la nft> <nombre de RTC>")
             return
         
@@ -650,10 +706,10 @@ async def on_message(message):
 
         if str(parsed_msg[1]) == "3":
             chosen_nft = 3
-            if int(parsed_msg[2]) <= aharray[4][0]:
+            if int(parsed_msg[2]) <= aharray[5][0]:
                 await message.channel.send('{}'.format(message.author.mention) + ", ta mise est trop faible ! Mise actuelle pour ce NFT : " + str(aharray[5][0]) + " RTC <:rtc:967486256109994074>")
                 return
-            if int(parsed_msg[2]) > aharray[4][0]:
+            if int(parsed_msg[2]) > aharray[5][0]:
                 aharray[5][0] = int(parsed_msg[2])
                 aharray[5][1] = message.author.id
                 aharray[5][2] = message.author.name
@@ -666,9 +722,76 @@ async def on_message(message):
         await message.channel.send('{}'.format(message.author.mention) + ", a misé " + parsed_msg[2] + " RTC <:rtc:967486256109994074> pour la " + parsed_msg[1] + "ème NFT ! Qui ira concurrencer cet entrepreneur de GENIE ??")
         return
 
-
-
     #endregion
+
+
+    #region Ratio
+    if message.content.lower().startswith('ratio'):
+        parsed_msg = message.content.split()
+        f = open("players.json", "r+", encoding="utf-8")
+        fdata = json.load(f)
+        farray = fdata['players']
+        located_player = []
+        index_target = 0
+        was_old = False
+        # Finding targeted player in players json array
+        for i in range (len(farray)):
+            if message.author.id in farray[i]:
+                located_player = farray[i]
+                index_target = i
+                was_old = True
+        # Player has been located
+        if not was_old:
+            await message.channel.send('{}'.format(message.author.mention) + ", créez un compte RTC pour faire bouger la blockchain ! --> rstart")
+            return
+        
+        try:
+            parsed_msg[2] = int(parsed_msg[2])
+        except:
+            await message.channel.send('{}'.format(message.author.mention + ", ton ratio est invalide ! Commande : ratio @membre <nombre rtc>"))
+
+        if len(parsed_msg) < 3:
+            await message.channel.send('{}'.format(message.author.mention + ", ton ratio est invalide ! Commande : ratio @membre <nombre rtc>"))
+            return
+
+        if parsed_msg[2] < 0:
+            await message.channel.send('{}'.format(message.author.mention + ", tu ne peux pas voler l'argent des autres (t'es con ou quoi ?) !"))
+            return
+
+        if parsed_msg[2] > fdata['players'][index_target][2]:
+            await message.channel.send('{}'.format(message.author.mention) + ", tu ne peux pas ratio plus de RTC que ce que tu as dans ton wallet, connard.")
+            return
+        
+        # Finding ratioed id
+        pinged_id = int(parsed_msg[1][1:][:len(parsed_msg[1])-2].replace("@","").replace("!",""))
+
+        was_old_ratioed = False
+        index_target_ratioed = 0
+        
+        for i in range (len(farray)):
+            if pinged_id in farray[i]:
+                index_target_ratioed = i
+                was_old_ratioed = True
+
+        # Ratioed player has been located
+        if not was_old_ratioed:
+            await message.channel.send('{}'.format(message.author.mention) + ", votre cible pour le ratio n'est pas inscrite sur RTCBot ! Pour ouvrir un compte de digital marketeux, elle doit faire rstart !")
+            return
+        
+        fdata['players'][index_target][2] -= parsed_msg[2]
+        fdata['players'][index_target_ratioed][2] += parsed_msg[2]
+
+        await message.channel.send('{}'.format(message.author.mention + ", ton ratio s'est déroulé avec succès. Cry."))
+
+        f.seek(0)
+        json.dump(fdata, f, indent=4)
+        f.truncate()
+        f.close()
+        
+    #endregion
+
+
+    
 
 client.run(TOKEN)
 
