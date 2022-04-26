@@ -853,8 +853,3 @@ async def on_message(message):
 
 client.run(TOKEN)
 
-# Todo : ratio command (give RTC to another member)
-#      : rmarket (show nft market, refresh once a day, pick from market directory)
-#      : rnft<number> (bid nft from market)
-#      : rshow <name> (show your <name> nft)
-#      : rtrade <@member> (trade nft with another member)
