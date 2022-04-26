@@ -1,25 +1,22 @@
 {
     "auction": [
-        "nft/poke_client.png",
-        "nft/poke_frog.png",
         "nft/poke_modo.png",
+        "nft/poke_ratio.png",
+        "nft/poke_lopin.png",
         [
-            1000,
-            0,
-            "Personne"
+            135383,
+            367697064592932866,
+            "Gx"
         ],
         [
-            1000,
-            0,
-            "Personne"
+            135383,
+            367697064592932866,
+            "Gx"
         ],
         [
-            1000,
-            0,
-            "Personne"
-        ],
-        0,
-        0,
-        0
+            135383,
+            367697064592932866,
+            "Gx"
+        ]
     ]
 }
