@@ -53,7 +53,7 @@ async def task_loop(seconds=60):
                     index_target = i
             
             if fdata['players'][index_target][2] >= aharray[3][0]:
-                fdata['players'][index_target][3].append(aharray[0].replace(".png", ""))
+                fdata['players'][index_target][3].append(aharray[0].replace(".png", "").replace("nft/", ""))
                 fdata['players'][index_target][2] -= aharray[3][0]
                 nft1_sold = True
             else:
@@ -77,7 +77,7 @@ async def task_loop(seconds=60):
                     index_target = i
 
             if fdata['players'][index_target][2] >= aharray[4][0]:
-                fdata['players'][index_target][3].append(aharray[1].replace(".png", ""))
+                fdata['players'][index_target][3].append(aharray[1].replace(".png", "").replace("nft/", ""))
                 fdata['players'][index_target][2] -= aharray[4][0]
                 nft2_sold = True
             else:
@@ -102,7 +102,7 @@ async def task_loop(seconds=60):
                     index_target = i
 
             if fdata['players'][index_target][2] >= aharray[5][0]:
-                fdata['players'][index_target][3].append(aharray[2].replace(".png", ""))
+                fdata['players'][index_target][3].append(aharray[2].replace(".png", "").replace("nft/", ""))
                 fdata['players'][index_target][2] -= aharray[5][0]
                 nft3_sold = True
             else:
@@ -589,7 +589,7 @@ async def on_message(message):
             return
         
         current_time = time.time()
-        luck = random.randrange(4)
+        luck = random.randrange(0, 4)
         perc = random.randrange(15, 40)
         pour = "%"
 
@@ -601,14 +601,14 @@ async def on_message(message):
             await message.channel.send('{}'.format(message.author.mention) + ", vous avez vidé vos miners, attendez " + str(int((located_player[9] - current_time + 1800)// 60)) + " minutes que ceux-ci finissent de miner ! ")
             return
 
-        if luck != 4 :
+        if luck != 3 :
             given_coins = located_player[5] * 3 + located_player[6] * 6 + located_player[7] * 9 + located_player[8] * 40
             fdata['players'][index_target][2] += given_coins
             await message.channel.send('{}'.format(message.author.mention) + ", votre minage vous fais gagner " + str(given_coins) + "RTC <:rtc:967486256109994074>")
             fdata['players'][index_target][9] = current_time
             
         
-        if luck == 4:
+        if luck == 3:
             if located_player[8] > 0:
                 fdata['players'][index_target][8] -= int(perc/100 * fdata['players'][index_target][8])
                 given_coins = located_player[5] * 3 + located_player[6] * 6 + located_player[7] * 9
@@ -871,3 +871,8 @@ async def on_message(message):
 
 client.run(TOKEN)
 
+# Todo : ratio command (give RTC to another member)
+#      : rmarket (show nft market, refresh once a day, pick from market directory)
+#      : rnft<number> (bid nft from market)
+#      : rshow <name> (show your <name> nft)
+#      : rtrade <@member> (trade nft with another member)
