@@ -402,7 +402,7 @@ async def on_message(message):
         try:
             parsed_msg[1] = int(parsed_msg[1])
             price = parsed_msg[1] * 20
-            if price == 0:
+            if price <= 0:
                 await message.channel.send('{}'.format(message.author.mention + ", tu ne peux pas acheter 0 miner cher entrepreneur !"))
                 return
         except:
@@ -450,7 +450,7 @@ async def on_message(message):
         try:
             parsed_msg[1] = int(parsed_msg[1])
             price = parsed_msg[1] * 35
-            if price == 0:
+            if price <= 0:
                 await message.channel.send('{}'.format(message.author.mention + ", tu ne peux pas acheter 0 miner cher entrepreneur !"))
                 return
         except:
@@ -498,14 +498,14 @@ async def on_message(message):
         try:
             parsed_msg[1] = int(parsed_msg[1])
             price = parsed_msg[1] * 55
-            if price == 0:
+            if price <= 0:
                 await message.channel.send('{}'.format(message.author.mention + ", tu ne peux pas acheter 0 miner cher entrepreneur !"))
                 return
         except:
             await message.channel.send('{}'.format(message.author.mention + ", nombre de miners invalide !"))
             return
 
-        if located_player[2] < 55:
+        if located_player[2] < price:
             await message.channel.send('{}'.format(message.author.mention) + ", vous n'avez pas assez d'argent, demandez à ceux qui aident les gens dans le besoin.")
             return
         
@@ -545,7 +545,7 @@ async def on_message(message):
         try:
             parsed_msg[1] = int(parsed_msg[1])
             price = parsed_msg[1] * 200
-            if price == 0:
+            if price <= 0:
                 await message.channel.send('{}'.format(message.author.mention + ", tu ne peux pas acheter 0 miner cher entrepreneur !"))
                 return
         except:
