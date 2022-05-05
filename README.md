@@ -24,7 +24,6 @@
   <summary>Table of Contents</summary>
   <ol>
     <li><a href="#gameplay-and-commands">Gameplay And Commands</a>
-    <li><a href="#getting-started">Modify The Source Code</a>
       <li><a href="#built-with">Built With</a>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
@@ -71,77 +70,78 @@ This bot is coded in Python, using JSON databases and Discord.py library. Here a
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 
-
-## Getting Started
-
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
-
 ### Prerequisites
 
-This is an example of how to list things you need to use the software and how to install them.
-* npm
+All libraries installation :
+* Dotenv
   ```sh
-  npm install npm@latest -g
+  pip install python-dotenv
+  ```
+* Discord.py
+  ```sh
+  pip install discord.py
+  ```
+* PIL
+  ```sh
+  pip install pillow
   ```
 
-### Installation
 
-_Below is an example of how you can instruct your audience on installing and setting up your app. This template doesn't rely on any external dependencies or services._
 
-1. Get a free API Key at [https://example.com](https://example.com)
-2. Clone the repo
+### Setting up the Bot
+
+1. Clone the repo.
    ```sh
-   git clone https://github.com/your_username_/Project-Name.git
+   git clone git@github.com:Lopinosaurus/RTCBot.git
    ```
-3. Install NPM packages
-   ```sh
-   npm install
-   ```
-4. Enter your API in `config.js`
-   ```js
-   const API_KEY = 'ENTER YOUR API';
-   ```
+   
+2. Create `nft/` directory, and put all of your custom pictures in it. It is highly recommended to put all your images in the same dimensions.
+   
+3. Enter your bot's token in `.env` file.
+ 
+4. Change the channel id by the wanted one on line 32 of `bot.py` file.
+
+5. Everything is set up ! You can modify what you want in the json for a custom start.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 
 
 <!-- USAGE EXAMPLES -->
-## Usage
+## Documentation :
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+### Functions : 
 
-_For more examples, please refer to the [Documentation](https://example.com)_
+#### @task.loop async function :
+
+Every minute, this function is checking if it's midnight, so the bot can update the market and do the transactions. 
+If current time is 00h00, the bot create the transaction, give the NFT to the concerned players, and build the image of the new market using PIL library. It also reset the auction house.
+
+#### on_message(message):
+
+- rstart command : start a new player array in `players.json`. Initialize all player attribute with default values (0RTC. 0NFT, rdaily possible).
+- rnet command : display miner shop. It is basically an embed constructor.
+- rbuy<miner> <amount> : Open `players.json`, localize the player operate. Close the file when operation is done.
+- rinv : Open `players.json`, localize the player, and display the value in an embed.
+- rdaily : Open `players.json`, localize the player, verify if he did not run the command today (time.asctime value)
+- rmine : Open `players.json`, localize the player, find the amount of miners. Add the RTC depending of miners possessed by player. If he has miner rigs, he has 1/4 chance to loose between 15% and 40% of them.
+- rmarket : Display the market in an embed, by opening and reading `auction.json`.
+- rbid <nft number> <bid in RTC> : Open `players.json`, localize the player, verify if he has enough money. Then open `auction.json` and refresh the data.
+- rnft <nft name> : open `nft_db.json` and search for the nft in args.
+- rlist : open `nft_db.json`, display all files in an embed.
+  
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 
 
-<!-- ROADMAP -->
-## Roadmap
-
-- [x] Add Changelog
-- [x] Add back to top links
-- [ ] Add Additional Templates w/ Examples
-- [ ] Add "components" document to easily copy & paste sections of the readme
-- [ ] Multi-language Support
-    - [ ] Chinese
-    - [ ] Spanish
-
-See the [open issues](https://github.com/othneildrew/Best-README-Template/issues) for a full list of proposed features (and known issues).
-
-<p align="right">(<a href="#top">back to top</a>)</p>
 
 
 
 <!-- CONTRIBUTING -->
 ## Contributing
 
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
-Don't forget to give the project a star! Thanks again!
+If you want to add something or modify the bot, please follow this :
 
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
@@ -153,56 +153,12 @@ Don't forget to give the project a star! Thanks again!
 
 
 
-<!-- LICENSE -->
-## License
-
-Distributed under the MIT License. See `LICENSE.txt` for more information.
-
-<p align="right">(<a href="#top">back to top</a>)</p>
-
-
-
 <!-- CONTACT -->
 ## Contact
 
-Your Name - [@your_twitter](https://twitter.com/your_username) - email@example.com
-
-Project Link: [https://github.com/your_username/repo_name](https://github.com/your_username/repo_name)
+Discord : Lopinosaurus#0404 - [@Lopinosaurus](https://twitter.com/Lopinosaurus)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 
 
-<!-- ACKNOWLEDGMENTS -->
-## Acknowledgments
-
-Use this space to list resources you find helpful and would like to give credit to. I've included a few of my favorites to kick things off!
-
-* [Choose an Open Source License](https://choosealicense.com)
-* [GitHub Emoji Cheat Sheet](https://www.webpagefx.com/tools/emoji-cheat-sheet)
-* [Malven's Flexbox Cheatsheet](https://flexbox.malven.co/)
-* [Malven's Grid Cheatsheet](https://grid.malven.co/)
-* [Img Shields](https://shields.io)
-* [GitHub Pages](https://pages.github.com)
-* [Font Awesome](https://fontawesome.com)
-* [React Icons](https://react-icons.github.io/react-icons/search)
-
-<p align="right">(<a href="#top">back to top</a>)</p>
-
-
-
-<!-- MARKDOWN LINKS & IMAGES -->
-<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/othneildrew/Best-README-Template.svg?style=for-the-badge
-[contributors-url]: https://github.com/othneildrew/Best-README-Template/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/othneildrew/Best-README-Template.svg?style=for-the-badge
-[forks-url]: https://github.com/othneildrew/Best-README-Template/network/members
-[stars-shield]: https://img.shields.io/github/stars/othneildrew/Best-README-Template.svg?style=for-the-badge
-[stars-url]: https://github.com/othneildrew/Best-README-Template/stargazers
-[issues-shield]: https://img.shields.io/github/issues/othneildrew/Best-README-Template.svg?style=for-the-badge
-[issues-url]: https://github.com/othneildrew/Best-README-Template/issues
-[license-shield]: https://img.shields.io/github/license/othneildrew/Best-README-Template.svg?style=for-the-badge
-[license-url]: https://github.com/othneildrew/Best-README-Template/blob/master/LICENSE.txt
-[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
-[linkedin-url]: https://linkedin.com/in/othneildrew
-[product-screenshot]: images/screenshot.png
